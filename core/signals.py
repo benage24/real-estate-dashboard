@@ -1,14 +1,20 @@
 # signals.py
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.contrib.auth.models import User
-from .models import UserProfile
+from .models import Tenant
 
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
+@receiver(post_save, sender=Tenant)
+def update_apartment_status_on_assign(sender, instance, created, **kwargs):
     if created:
-        UserProfile.objects.create(user=instance)
+        apartment=instance.apartment
+        apartment.status="rented"
+        apartment.save()
 
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()
+
+
+@receiver(post_delete, sender=Tenant)
+def update_apartment_status_on_remove(sender, instance, **kwargs):
+    apartment = instance.apartment
+    apartment.status = "available"
+    apartment.save()

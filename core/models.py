@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from account.models import User
 
@@ -34,6 +36,9 @@ class Apartment(models.Model):
     rent_price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
 
+    class Meta:
+        unique_together=('building','apartment_number')
+
     def __str__(self):
         return f"Apt {self.apartment_number} - {self.building.name}"
 
@@ -67,5 +72,11 @@ class Payment(models.Model):
     def __str__(self):
         return f"{self.tenant.name} paid {self.amount} for {self.apartment}"
 
+@receiver(post_save, sender=Tenant)
+def update_apartment_status_on_assign(sender, instance, created, **kwargs):
 
+    if created:
+        apartment=instance.apartment
+        apartment.status="rented"
+        apartment.save()
 

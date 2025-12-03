@@ -109,4 +109,11 @@ class User(AbstractBaseUser, PermissionsMixin):
         send_mail(subject, message, from_email, [self.email], **kwargs)
 
     def is_staff(self):
-        return self.is_staff
+        return self.is_admin
+    @property
+    def manager(self):
+        return self.is_admin and not self.is_superuser
+
+    @property
+    def super_manager(self):
+        return self.is_superuser and self.is_admin

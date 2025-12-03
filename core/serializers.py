@@ -21,15 +21,29 @@ class BuildingSerializer(serializers.ModelSerializer):
 
 
 class ApartmentSerializer(serializers.ModelSerializer):
+    building=BuildingSerializer(read_only=True)
+
     class Meta:
         model = Apartment
-        fields = '__all__'
+        fields = ['id','apartment_number','rooms','rent_price','status','building']
+        # fields = '__all__'
+        #
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            request=self.context.get("request")
+            user = self.request.user
+            if request and user.is_authenticated:
+                # available apartment
+                self.fields['building'].queryset = Building.objects.filter(user=user)
+                print("user",user)
+
 
 
 class TenantSerializer(serializers.ModelSerializer):
+    apartment = ApartmentSerializer(read_only=True)
     class Meta:
         model = Tenant
-        fields = '__all__'
+        fields = ['id','name','contact','apartment']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
